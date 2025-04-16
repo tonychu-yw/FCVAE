@@ -31,7 +31,7 @@ class UniDataset(torch.utils.data.Dataset):
             file_path = os.path.join(data_dir, file)
             df = pd.read_csv(file_path)
             df_train = df[: int(0.35 * len(df))]
-            df_train = df_train.fillna(method="bfill")
+            df_train = df_train.bfill()
             train_value = np.asarray(df_train["value"])
             train_label = np.asarray(df_train["label"])
             train_value = train_value[np.where(train_label == 0)[0]]
@@ -57,7 +57,7 @@ class UniDataset(torch.utils.data.Dataset):
             df2["value"] = value
             df2["label"] = label
             df2["missing"] = missing.astype(int)
-            df2 = df2.fillna(method="bfill")
+            df2 = df2.bfill()
             df2 = df2.fillna(0)
             df2["label"] = df2["label"].astype(int)
             if data_pre_mode == 0:

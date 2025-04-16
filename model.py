@@ -22,6 +22,7 @@ class MyVAE(LightningModule):
 
     def __init__(self, hparams):
         super(MyVAE, self).__init__()
+        self.test_step_outputs = []
         self.save_hyperparameters()
         self.hp = hparams
         self.__build_model()
@@ -91,6 +92,7 @@ class MyVAE(LightningModule):
             mask = torch.logical_not(z_all)
             mu_x, var_x, rec_x, mu, var, loss = self.forward(x, "train", mask)
         recon_prob = recon_prob[:, :, -1]
+
         output = OrderedDict(
             {
                 "y": y.cpu(),
@@ -101,9 +103,12 @@ class MyVAE(LightningModule):
                 "var_x": var_x[:, :, -1].cpu(),
             }
         )
+        self.test_step_outputs.append(output)
+
         return output
 
-    def test_epoch_end(self, outputs):
+    def on_test_epoch_end(self):
+        outputs = self.test_step_outputs
         y = torch.cat(([x["y"] for x in outputs]), 0)
         recon_prob = torch.cat(([x["recon_prob"] for x in outputs]), 0)
         x = torch.cat(([x["x"] for x in outputs]), 0)
@@ -158,6 +163,7 @@ class MyVAE(LightningModule):
                     best_recall_,
                 )
             )
+        self.test_step_outputs.clear()
 
     def mydataloader(self, mode):
         dataset = UniDataset(
@@ -204,10 +210,10 @@ class MyVAE(LightningModule):
         parser.add_argument("--window", default=64, type=int)
         parser.add_argument("--latent_dim", default=8, type=int)
         parser.add_argument("--only_test", default=0, type=int)
-        parser.add_argument("--max_epoch", default=30, type=int)
+        parser.add_argument("--max_epoch", default=100, type=int)
         parser.add_argument("--batch_size", default=512, type=int)
         parser.add_argument("--num_workers", default=8, type=int)
-        parser.add_argument("--learning_rate", default=0.0005, type=float)
+        parser.add_argument("--learning_rate", default=5e-4, type=float)
         parser.add_argument("--sliding_window_size", default=1, type=int)
         parser.add_argument("--save_file", default="./result/Score.txt", type=str)
         parser.add_argument("--data_pre_mode", default=0, type=int)
