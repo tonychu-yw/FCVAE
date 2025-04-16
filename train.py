@@ -35,7 +35,6 @@ def main(hparams):
         callbacks=[early_stop, checkpoint],
         logger=logger,
         accelerator="gpu",
-        gpus=[hparams.gpu],
         check_val_every_n_epoch=1,
         gradient_clip_algorithm="value",
         gradient_clip_val=2,
